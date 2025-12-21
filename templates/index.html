@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerGrid AI | Electricity Demand Forecasting</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+            </div>
+            <span class="logo-text">PowerGrid<span class="logo-accent">AI</span></span>
+        </div>
+        <div class="header-status">
+            <div class="status-dot"></div>
+            <span>Model Active</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="badge-pulse"></span>
+                Machine Learning Powered
+            </div>
+            <h1 class="hero-title">
+                Electricity Demand
+                <span class="gradient-text">Forecasting</span>
+            </h1>
+            <p class="hero-subtitle">
+                Advanced AI-powered predictions using Gradient Boosting algorithms to forecast electricity demand with weather-based analysis
+            </p>
+        </section>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard">
+            <!-- Input Panel -->
+            <section class="panel input-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <h2>Forecast Parameters</h2>
+                </div>
+                
+                <form id="forecastForm" class="forecast-form">
+                    <!-- Date Time Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Date & Time
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="date">Date</label>
+                                <input type="date" id="date" name="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="time">Time</label>
+                                <input type="time" id="time" name="time" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weather Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                            </svg>
+                            Weather Conditions
+                        </h3>
+                        
+                        <div class="form-group slider-group">
+                            <div class="slider-header">
+                                <label for="temperature">Temperature</label>
+                                <span class="slider-value"><span id="tempValue">25</span>°C</span>
+                            </div>
+                            <input type="range" id="temperature" name="temperature" min="0" max="60" value="25" class="premium-slider">
+                            <div class="slider-labels">
+                                <span>0°C</span>
+                                <span>60°C</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group slider-group">
+                            <div class="slider-header">
+                                <label for="humidity">Humidity</label>
+                                <span class="slider-value"><span id="humidityValue">50</span>%</span>
+                            </div>
+                            <input type="range" id="humidity" name="humidity" min="0" max="100" value="50" class="premium-slider">
+                            <div class="slider-labels">
+                                <span>0%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rainfall">Rainfall (mm)</label>
+                                <input type="number" id="rainfall" name="rainfall" min="0" step="0.1" value="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="windSpeed">Wind Speed (km/h)</label>
+                                <input type="number" id="windSpeed" name="windSpeed" min="0" max="100" step="0.1" value="10" placeholder="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="predict-btn" id="predictBtn">
+                        <span class="btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            Generate Forecast
+                        </span>
+                        <span class="btn-loader">
+                            <svg class="spinner" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4"/>
+                            </svg>
+                        </span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Results Panel -->
+            <section class="panel results-panel" id="resultsPanel">
+                <div class="panel-header">
+                    <div class="panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3v18h18"/>
+                            <path d="M18 9l-5 5-4-4-3 3"/>
+                        </svg>
+                    </div>
+                    <h2>Prediction Results</h2>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                    </div>
+                    <h3>Ready to Forecast</h3>
+                    <p>Configure the parameters and generate your electricity demand prediction</p>
+                </div>
+
+                <!-- Results Content -->
+                <div class="results-content" id="resultsContent" style="display: none;">
+                    <!-- Main Prediction Card -->
+                    <div class="prediction-card">
+                        <div class="prediction-label">Predicted Demand</div>
+                        <div class="prediction-value">
+                            <span class="value-number" id="demandValue">0</span>
+                            <span class="value-unit">MW</span>
+                        </div>
+                        <div class="prediction-meta" id="predictionMeta">
+                            --
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon temp-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statTemp">--</span>
+                                <span class="stat-label">Temperature</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon humidity-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statHumidity">--</span>
+                                <span class="stat-label">Humidity</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon rain-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                                    <path d="M11 21v-1"/>
+                                    <path d="M7 21v-1"/>
+                                    <path d="M15 21v-1"/>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statRain">--</span>
+                                <span class="stat-label">Rainfall</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon wind-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/>
+                                    <path d="M9.6 4.6A2 2 0 1 1 11 8H2"/>
+                                    <path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statWind">--</span>
+                                <span class="stat-label">Wind Speed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="chart-container">
+                        <h3 class="chart-title">24-Hour Forecast</h3>
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Powered by Gradient Boosting Machine Learning Algorithm</p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
