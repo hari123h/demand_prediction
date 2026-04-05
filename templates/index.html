@@ -43,19 +43,16 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Hero Section -->
         <section class="hero">
-            <div class="hero-badge">
-                <span class="badge-pulse"></span>
-                Machine Learning Powered
-            </div>
             <h1 class="hero-title">
-                Electricity Demand
-                <span class="gradient-text">Forecasting</span>
-            </h1>
-            <p class="hero-subtitle">
-                Advanced AI-powered predictions using Gradient Boosting algorithms to forecast electricity demand with weather-based analysis
-            </p>
+                Electricity Demand <span class="gradient-text">Forecasting</span>
+           </h1>
+            
+
+            <div class="nav-tabs" style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+                <a href="/" class="nav-btn" style="padding: 10px 20px; border-radius: 8px; background: rgba(99, 102, 241, 0.2); color: #fff; text-decoration: none; border: 1px solid rgba(99, 102, 241, 0.5);">Hourly Forecast</a>
+                <a href="/peak-demand" class="nav-btn" style="padding: 10px 20px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: #a1a1aa; text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">Daily Peak Demand</a>
+            </div>
         </section>
 
         <!-- Dashboard Grid -->
@@ -131,30 +128,36 @@
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="rainfall">Rainfall (mm)</label>
-                                <input type="number" id="rainfall" name="rainfall" min="0" step="0.1" value="0" placeholder="0">
+                                <label for="rainfall">Rainfall</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="rainfall" name="rainfall" min="0" step="0.1" value="0" placeholder="0">
+                                    <span class="unit-suffix">mm</span>
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label for="windSpeed">Wind Speed (km/h)</label>
-                                <input type="number" id="windSpeed" name="windSpeed" min="0" max="100" step="0.1" value="10" placeholder="10">
+                                <label for="windSpeed">Wind Speed</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="windSpeed" name="windSpeed" min="0" max="100" step="0.1" value="10" placeholder="10">
+                                    <span class="unit-suffix">km/h</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <button type="submit" class="predict-btn" id="predictBtn">
-                        <span class="btn-content">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                            </svg>
-                            Generate Forecast
-                        </span>
-                        <span class="btn-loader">
-                            <svg class="spinner" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4"/>
-                            </svg>
-                        </span>
-                    </button>
                 </form>
+                
+                <button type="submit" form="forecastForm" class="predict-btn" id="predictBtn">
+                    <span class="btn-content">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        Generate Forecast
+                    </span>
+                    <span class="btn-loader">
+                        <svg class="spinner" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4"/>
+                        </svg>
+                    </span>
+                </button>
             </section>
 
             <!-- Results Panel -->
@@ -258,9 +261,9 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <!-- <footer class="footer">
         <p>Powered by Gradient Boosting Machine Learning Algorithm</p>
-    </footer>
+    </footer> -->
 
     <script src="/static/js/app.js"></script>
 </body>

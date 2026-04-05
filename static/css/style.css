@@ -5,26 +5,25 @@
 
 /* CSS Variables */
 :root {
-    /* Colors - Sophisticated Dark Palette */
+    /* Colors - Deep Dark Neumorphic Palette */
     --bg-primary: #0a0a0f;
     --bg-secondary: #12121a;
     --bg-tertiary: #1a1a25;
-    --bg-card: rgba(22, 22, 32, 0.6);
-    --bg-card-hover: rgba(28, 28, 42, 0.8);
+    --bg-card: #15151e;
+    --bg-input: #0e0e14;
     
     /* Accent Colors */
-    --accent-primary: #6366f1;
-    --accent-secondary: #8b5cf6;
-    --accent-tertiary: #a855f7;
+    --accent-primary: #8b5cf6;
+    --accent-secondary: #a855f7;
+    --accent-tertiary: #c084fc;
     --accent-cyan: #22d3ee;
     --accent-emerald: #10b981;
     --accent-amber: #f59e0b;
     --accent-rose: #f43f5e;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-    --gradient-secondary: linear-gradient(135deg, #22d3ee 0%, #6366f1 100%);
-    --gradient-glow: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.1) 100%);
+    --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+    --gradient-glow: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(168, 85, 247, 0.1) 100%);
     
     /* Text */
     --text-primary: #ffffff;
@@ -32,8 +31,8 @@
     --text-muted: #71717a;
     
     /* Borders */
-    --border-color: rgba(99, 102, 241, 0.15);
-    --border-glow: rgba(99, 102, 241, 0.4);
+    --border-color: rgba(255, 255, 255, 0.05);
+    --border-glow: rgba(139, 92, 246, 0.4);
     
     /* Shadows */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -45,7 +44,7 @@
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 20px;
-    --radius-xl: 28px;
+    --radius-xl: 24px;
     
     /* Transitions */
     --transition-fast: 0.15s ease;
@@ -337,7 +336,7 @@ body {
 }
 
 .gradient-text {
-    display: block;
+    display: inline-block;
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -355,7 +354,7 @@ body {
 /* Dashboard Grid */
 .dashboard {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
+    grid-template-columns: 420px 1fr;
     gap: 30px;
     animation: fadeInUp 0.8s ease-out 0.4s backwards;
 }
@@ -368,12 +367,12 @@ body {
 
 /* Panels */
 .panel {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--bg-card); /* Solid inner box look */
+    border: 1px solid var(--border-color); /* Subtle inner shadow/border */
     border-radius: var(--radius-xl);
-    padding: 28px;
-    backdrop-filter: blur(20px);
+    padding: 32px; 
     transition: all var(--transition-base);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .panel:hover {
@@ -419,10 +418,11 @@ body {
 }
 
 .form-section {
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(99, 102, 241, 0.08);
+    padding: 24px;
+    background: #0e0e14; /* Inner box dark background */
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .section-title {
@@ -446,7 +446,7 @@ body {
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 12px;
 }
 
 .form-group {
@@ -465,24 +465,46 @@ body {
 .form-group input[type="time"],
 .form-group input[type="number"] {
     width: 100%;
-    padding: 14px 16px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    background: #08080c; /* Deep pill background */
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
     color: var(--text-primary);
     font-family: 'Outfit', sans-serif;
-    font-size: 1rem;
+    font-size: 0.95rem;
     transition: all var(--transition-base);
     outline: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .form-group input:focus {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(139, 92, 246, 0.15);
 }
 
 .form-group input::placeholder {
     color: var(--text-muted);
+}
+
+/* Input with Unit Suffix */
+.input-with-unit {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-unit input {
+    width: 100%;
+    padding-right: 60px; /* Space for the suffix */
+}
+
+.input-with-unit .unit-suffix {
+    position: absolute;
+    right: 16px;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    pointer-events: none;
 }
 
 /* Premium Slider */
@@ -557,18 +579,19 @@ body {
 .predict-btn {
     position: relative;
     width: 100%;
-    padding: 18px 32px;
+    padding: 16px 32px;
     background: var(--gradient-primary);
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: 16px; /* Pill shape */
     color: white;
     font-family: 'Outfit', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     cursor: pointer;
     overflow: hidden;
     transition: all var(--transition-base);
-    margin-top: 8px;
+    margin-top: 24px;
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .predict-btn::before {
@@ -588,7 +611,7 @@ body {
 
 .predict-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .predict-btn:active {
@@ -632,6 +655,7 @@ body {
     to { transform: rotate(360deg); }
 }
 
+
 /* Empty State */
 .empty-state {
     display: flex;
@@ -649,12 +673,12 @@ body {
 }
 
 .empty-icon {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--gradient-glow);
+    background: rgba(139, 92, 246, 0.1);
     border-radius: 50%;
     margin-bottom: 24px;
 }
@@ -685,13 +709,14 @@ body {
 /* Prediction Card */
 .prediction-card {
     text-align: center;
-    padding: 40px;
-    background: var(--gradient-glow);
-    border: 1px solid var(--border-glow);
+    padding: 32px;
+    background: #0e0e14; /* Solid dark background */
+    border: 1px solid rgba(139, 92, 246, 0.4); /* Purple glow border */
     border-radius: var(--radius-xl);
     margin-bottom: 24px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .prediction-card::before {
@@ -701,7 +726,7 @@ body {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
     animation: cardGlow 6s ease-in-out infinite;
 }
 
@@ -738,6 +763,7 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     line-height: 1;
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.4); /* Subtle outer glow matching primary brand color */
 }
 
 .value-unit {
@@ -754,8 +780,8 @@ body {
 
 /* Stats Grid */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    justify-content: space-between;
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -763,12 +789,14 @@ body {
 .stat-card {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 18px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
+    gap: 12px;
+    padding: 12px 20px 12px 12px;
+    background: #0e0e14;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    border-radius: 100px; /* Pill shape */
     transition: all var(--transition-base);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    flex: 1; /* Stretch properly */
 }
 
 .stat-card:hover {
@@ -777,22 +805,29 @@ body {
 }
 
 .stat-icon {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: 12px; /* Slightly rounded icons inside pill */
 }
 
 .stat-icon svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
 }
 
 .temp-icon {
     background: rgba(244, 63, 94, 0.15);
     color: var(--accent-rose);
+    transition: all var(--transition-base);
+}
+
+.temp-icon.hot {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--accent-amber);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
 }
 
 .humidity-icon {

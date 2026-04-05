@@ -1,0 +1,8 @@
+__pycache__/
+*.npy
+*.diff
+.venv
+venv
+env
+*.log
+demand_forecast/

@@ -142,6 +142,18 @@ function updateSliderBackground(slider) {
     const value = slider.value;
     const percentage = ((value - min) / (max - min)) * 100;
     
+    // Update thermometer icon if it's the temperature slider
+    if (slider.id === 'temperature') {
+        const tempIcon = document.querySelector('.temp-icon');
+        if (tempIcon) {
+            if (value > 30) {
+                tempIcon.classList.add('hot');
+            } else {
+                tempIcon.classList.remove('hot');
+            }
+        }
+    }
+    
     slider.style.background = `linear-gradient(to right, 
         rgba(99, 102, 241, 0.8) 0%, 
         rgba(139, 92, 246, 0.8) ${percentage}%, 
@@ -280,6 +292,31 @@ function animateCounter(elementId, endValue, startValue = 0, duration = 1000) {
 }
 
 /**
+ * Custom Chart.js Plugin for vertical hover line
+ */
+const verticalLinePlugin = {
+    id: 'verticalLine',
+    afterDraw: (chart) => {
+        if (chart.tooltip?._active?.length) {
+            const ctx = chart.ctx;
+            const x = chart.tooltip._active[0].element.x;
+            const topY = chart.scales.y.top;
+            const bottomY = chart.scales.y.bottom;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, topY);
+            ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(99, 102, 241, 0.5)';
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+};
+
+/**
  * Update the forecast chart
  */
 let forecastChart = null;
@@ -290,6 +327,9 @@ function updateChart(hourlyData) {
     const labels = hourlyData.map(d => d.hour);
     const data = hourlyData.map(d => d.demand);
     
+    // Confidence Interval (+/- 5%)
+    const upperData = data.map(v => v * 1.05);
+    const lowerData = data.map(v => v * 0.95);
     // Destroy existing chart
     if (forecastChart) {
         forecastChart.destroy();
@@ -300,24 +340,53 @@ function updateChart(hourlyData) {
     gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
     gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
     
+    const datasets = [
+        {
+            label: 'Predicted Demand (MW)',
+            data: data,
+            borderColor: '#6366f1',
+            backgroundColor: gradient,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 8,
+            pointHoverBackgroundColor: '#6366f1',
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 3,
+            order: 2
+        },
+        {
+            label: 'Upper Bound',
+            data: upperData,
+            borderColor: 'transparent',
+            backgroundColor: 'transparent',
+            borderWidth: 0,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            order: 1
+        },
+        {
+            label: 'Lower Bound',
+            data: lowerData,
+            borderColor: 'transparent',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            borderWidth: 0,
+            fill: '-1', // Fill to previous dataset (Upper Bound)
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            order: 3
+        }
+    ];
+    
     forecastChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Predicted Demand (MW)',
-                data: data,
-                borderColor: '#6366f1',
-                backgroundColor: gradient,
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-                pointHoverRadius: 8,
-                pointHoverBackgroundColor: '#6366f1',
-                pointHoverBorderColor: '#ffffff',
-                pointHoverBorderWidth: 3
-            }]
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -331,37 +400,47 @@ function updateChart(hourlyData) {
                     display: false
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(18, 18, 26, 0.95)',
-                    titleColor: '#ffffff',
-                    bodyColor: '#a1a1aa',
-                    borderColor: 'rgba(99, 102, 241, 0.3)',
-                    borderWidth: 1,
-                    cornerRadius: 12,
-                    padding: 16,
+                    backgroundColor: '#ffffff',
+                    titleColor: '#000000',
+                    bodyColor: '#1a1a1a',
+                    borderColor: 'rgba(255, 255, 255, 1)',
+                    borderWidth: 0,
+                    cornerRadius: 100, /* Pill shape */
+                    padding: {
+                        top: 8,
+                        bottom: 8,
+                        left: 16,
+                        right: 16
+                    },
                     titleFont: {
                         family: 'Outfit',
-                        size: 14,
+                        size: 13,
                         weight: '600'
                     },
                     bodyFont: {
-                        family: 'JetBrains Mono',
+                        family: 'Outfit',
                         size: 13
                     },
                     displayColors: false,
+                    caretSize: 0, /* No pointer triangle */
+                    yAlign: 'bottom',
+                    filter: function(item) {
+                       return !item.dataset.label.includes('Bound');
+                    },
                     callbacks: {
-                        title: (items) => `Time: ${items[0].label}`,
-                        label: (item) => `Demand: ${item.raw.toFixed(2)} MW`
+                        title: () => null, /* Hide default title */
+                        label: (item) => `Predicted Load: ${item.raw.toFixed(2)} MW | Time: ${item.label} | Temp: ${document.getElementById('tempValue').textContent}°C`
                     }
                 }
             },
             scales: {
                 x: {
                     grid: {
-                        color: 'rgba(99, 102, 241, 0.08)',
+                        color: 'rgba(255, 255, 255, 0.02)',
                         drawBorder: false
                     },
                     ticks: {
-                        color: '#71717a',
+                        color: 'rgba(255, 255, 255, 0.3)',
                         font: {
                             family: 'Outfit',
                             size: 11
@@ -371,13 +450,13 @@ function updateChart(hourlyData) {
                 },
                 y: {
                     grid: {
-                        color: 'rgba(99, 102, 241, 0.08)',
+                        color: 'rgba(255, 255, 255, 0.02)',
                         drawBorder: false
                     },
                     ticks: {
-                        color: '#71717a',
+                        color: 'rgba(255, 255, 255, 0.3)',
                         font: {
-                            family: 'JetBrains Mono',
+                            family: 'Outfit',
                             size: 11
                         },
                         callback: (value) => value.toFixed(0) + ' MW'
@@ -388,7 +467,8 @@ function updateChart(hourlyData) {
                 duration: 1500,
                 easing: 'easeOutQuart'
             }
-        }
+        },
+        plugins: [verticalLinePlugin]
     });
 }
 

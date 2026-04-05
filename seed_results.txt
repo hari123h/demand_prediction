@@ -1,0 +1,15 @@
+FNN Seed: 40 - R2: 0.8809
+FNN Seed: 41 - R2: 0.8575
+FNN Seed: 42 - R2: 0.8837
+FNN Seed: 43 - R2: 0.7992
+FNN Seed: 44 - R2: 0.7313
+FNN Seed: 45 - R2: 0.9128
+FNN Seed: 46 - R2: 0.6966
+FNN Seed: 47 - R2: 0.9236
+FNN Seed: 48 - R2: 0.8632
+FNN Seed: 49 - R2: 0.8355
+LSTM Seed: 40 - R2: 0.8809
+LSTM Seed: 41 - R2: 0.8370
+LSTM Seed: 42 - R2: 0.8935
+LSTM Seed: 43 - R2: 0.8087
+LSTM Seed: 44 - R2: 0.9300
