@@ -181,7 +181,6 @@ function initializeForm() {
             time: document.getElementById('time').value,
             temperature: document.getElementById('temperature').value,
             humidity: document.getElementById('humidity').value,
-            rainfall: document.getElementById('rainfall').value,
             windSpeed: document.getElementById('windSpeed').value
         };
         
@@ -245,11 +244,8 @@ function displayResults(data) {
         document.getElementById('statHumidity').textContent = `${data.humidity}%`;
     }, 300);
     setTimeout(() => {
-        document.getElementById('statRain').textContent = `${data.rainfall} mm`;
-    }, 400);
-    setTimeout(() => {
         document.getElementById('statWind').textContent = `${data.wind_speed} km/h`;
-    }, 500);
+    }, 400);
     
     // Update chart
     if (data.hourly_forecast) {

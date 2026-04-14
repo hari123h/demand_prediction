@@ -26,8 +26,8 @@ def train_demand_gb():
     df['Dow_cos'] = np.cos(2 * np.pi * df['DayOfWeek'] / 7)
 
     features = [
-        'Temperature', 'Humidity', 'Rain', 'WindSpeed',
-        'Hour', 'DayOfWeek', 'Month', 'DayOfMonth', 'Quarter', 'IsWeekend',
+        'Temperature', 'Humidity', 'WindSpeed',
+        'Month', 'IsWeekend',
         'Hour_sin', 'Hour_cos', 'Dow_sin', 'Dow_cos'
     ]
     target = 'Demand'
@@ -91,9 +91,9 @@ def train_peak_gb():
     daily_df = daily_df.dropna().reset_index(drop=True)
 
     features = [
-        'Month', 'DayOfWeek', 'DayOfMonth', 'Quarter', 'IsWeekend',
+        'IsWeekend',
         'Month_sin', 'Month_cos', 'Dow_sin', 'Dow_cos',
-        'PeakDemand_lag1', 'PeakDemand_lag7', 'PeakDemand_roll7'
+        'PeakDemand_lag1', 'PeakDemand_lag7'
     ]
     target = 'PeakDemand'
 

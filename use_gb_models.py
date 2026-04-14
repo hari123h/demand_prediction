@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 import joblib
 
-def predict_demand_gb(temperature, humidity, rain, wind_speed, datetime_str):
+def predict_demand_gb(temperature, humidity, wind_speed, datetime_str):
     print(f"\n--- Predicting Hourly Demand (GB Model) for {datetime_str} ---")
     
     # 1. Load the model and preprocessing objects
@@ -26,7 +26,6 @@ def predict_demand_gb(temperature, humidity, rain, wind_speed, datetime_str):
     values = {
         'Temperature': temperature,
         'Humidity': humidity,
-        'Rain': rain,
         'WindSpeed': wind_speed,
         'Hour': hour,
         'DayOfWeek': day_of_week,
@@ -113,8 +112,7 @@ if __name__ == '__main__':
         hum_input = input("Enter Humidity (%) [Default 45.0]: ")
         humidity = float(hum_input) if hum_input.strip() else 45.0
         
-        rain_input = input("Enter Rainfall (mm) [Default 0.0]: ")
-        rain = float(rain_input) if rain_input.strip() else 0.0
+
         
         wind_input = input("Enter Wind Speed (km/h) [Default 12.5]: ")
         wind_speed = float(wind_input) if wind_input.strip() else 12.5
@@ -122,7 +120,6 @@ if __name__ == '__main__':
         predict_demand_gb(
             temperature=temperature, 
             humidity=humidity, 
-            rain=rain, 
             wind_speed=wind_speed, 
             datetime_str=datetime_str
         )

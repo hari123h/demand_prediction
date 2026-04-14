@@ -36,12 +36,11 @@ def main():
                 
                 temp = float(input("Enter Temperature (°C): ").strip())
                 humidity = float(input("Enter Humidity (%): ").strip())
-                rainfall = float(input("Enter Rainfall (mm): ").strip())
                 wind_speed = float(input("Enter Wind Speed (km/h): ").strip())
                 
                 print("\nGenerating prediction...")
                 result = lstm_forecaster.predict_demand(
-                    datetime_str, temp, humidity, rainfall, wind_speed
+                    datetime_str, temp, humidity, wind_speed
                 )
                 
                 print("\n--- PREDICTION RESULT ---")

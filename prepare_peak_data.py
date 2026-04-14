@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import pickle
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 print("Preparing Peak Demand Data (from Main Dataset)")
 print("=" * 60)
@@ -49,24 +51,30 @@ daily_df['PeakDemand_roll7'] = daily_df['PeakDemand'].rolling(window=7, min_peri
 daily_df = daily_df.dropna().reset_index(drop=True)
 
 features = [
-    'Month',
-    'DayOfWeek',
-    'DayOfMonth',
-    'Quarter',
     'IsWeekend',
     'Month_sin',
     'Month_cos',
     'Dow_sin',
     'Dow_cos',
     'PeakDemand_lag1',
-    'PeakDemand_lag7',
-    'PeakDemand_roll7'
+    'PeakDemand_lag7'
 ]
 
 target = 'PeakDemand'
 
 X = daily_df[features].copy()
 y = daily_df[target].copy()
+
+# ===================== CORRELATION MATRIX =====================
+corr_df = daily_df[features + [target]].copy()
+corr = corr_df.corr()
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm")
+plt.title("Peak Demand Correlation Matrix")
+plt.show()
+
+corr.to_csv("peak_correlation_matrix.csv")
 
 print(f"\nFeatures ({len(features)}):")
 for i, feat in enumerate(features, 1):

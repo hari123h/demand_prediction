@@ -117,7 +117,7 @@ class LSTMDemandForecaster:
         self.time_steps = 24
         print("LSTM Model loaded successfully!")
 
-    def create_sequence(self, dt, temp, humidity, rainfall, wind_speed):
+    def create_sequence(self, dt, temp, humidity, wind_speed):
         sequence = []
         for i in range(self.time_steps, 0, -1):
             past_dt = dt - timedelta(hours=i)
@@ -132,7 +132,6 @@ class LSTMDemandForecaster:
                 'Demand': self.default_demand,
                 'Temperature': temp,
                 'Humidity': humidity,
-                'Rain': rainfall,
                 'WindSpeed': wind_speed,
                 'Hour': hour,
                 'DayOfWeek': day_of_week,
@@ -146,9 +145,6 @@ class LSTMDemandForecaster:
                 'Dow_cos': np.cos(2 * np.pi * day_of_week / 7)
             }
             
-            if 'Rainfall' in self.features and 'Rain' not in self.features:
-                 values['Rainfall'] = rainfall
-            
             missing = [f for f in self.features if f not in values]
             if missing:
                 raise ValueError(f"Missing features: {missing}")
@@ -160,9 +156,9 @@ class LSTMDemandForecaster:
         sequence_scaled = self.scaler_X.transform(sequence_array)
         return sequence_scaled.reshape(1, self.time_steps, len(self.features))
 
-    def predict_demand(self, datetime_str, temp, humidity, rainfall, wind_speed):
+    def predict_demand(self, datetime_str, temp, humidity, wind_speed):
         dt = pd.to_datetime(datetime_str)
-        X_seq_scaled = self.create_sequence(dt, temp, humidity, rainfall, wind_speed)
+        X_seq_scaled = self.create_sequence(dt, temp, humidity, wind_speed)
         
         y_pred_scaled = self.model.predict(X_seq_scaled, verbose=0)
         y_pred = self.scaler_y.inverse_transform(y_pred_scaled)[0, 0]
@@ -172,11 +168,10 @@ class LSTMDemandForecaster:
             'predicted_demand_mw': round(float(y_pred), 2),
             'temperature': temp,
             'humidity': humidity,
-            'rainfall': rainfall,
             'wind_speed': wind_speed
         }
 
-    def predict_hourly_forecast(self, start_datetime, temp, humidity, rainfall, wind_speed, hours=24):
+    def predict_hourly_forecast(self, start_datetime, temp, humidity, wind_speed, hours=24):
         forecasts = []
         dt = pd.to_datetime(start_datetime)
         
@@ -186,7 +181,7 @@ class LSTMDemandForecaster:
             
             result = self.predict_demand(
                 current_dt.strftime('%Y-%m-%d %H:%M:%S'),
-                temp_adj, humidity, rainfall, wind_speed
+                temp_adj, humidity, wind_speed
             )
             forecasts.append({
                 'hour': current_dt.strftime('%H:%M'),
@@ -230,16 +225,15 @@ def predict():
         datetime_str = f"{data['date']} {data['time']}:00"
         temperature = float(data['temperature'])
         humidity = float(data['humidity'])
-        rainfall = float(data['rainfall'])
         wind_speed = float(data['windSpeed'])
         
         result = forecaster.predict_demand(
-            datetime_str, temperature, humidity, rainfall, wind_speed
+            datetime_str, temperature, humidity, wind_speed
         )
         
         # Get hourly forecast
         hourly = forecaster.predict_hourly_forecast(
-            datetime_str, temperature, humidity, rainfall, wind_speed, hours=24
+            datetime_str, temperature, humidity, wind_speed, hours=24
         )
         
         result['hourly_forecast'] = hourly

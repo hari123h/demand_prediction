@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import pickle
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 print("Data Preparation for LSTM")
 print("=" * 60)
@@ -35,13 +37,8 @@ features = [
     'Demand', # Keeping past demand in the sequence
     'Temperature',
     'Humidity',
-    'Rain',
     'WindSpeed',
-    'Hour',
-    'DayOfWeek',
     'Month',
-    'DayOfMonth',
-    'Quarter',
     'IsWeekend',
     'Hour_sin',
     'Hour_cos',
@@ -53,7 +50,17 @@ target = 'Demand'
 
 X_df = df[features].copy()
 y_df = df[target].copy()
+#correlation matrix
+# ===================== CORRELATION MATRIX =====================
+corr = X_df.corr()
 
+plt.figure(figsize=(14,10))
+sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm")
+plt.title("Full Correlation Matrix")
+plt.show()
+
+# Optional: Save correlation matrix
+corr.to_csv("correlation_matrix.csv")
 # ===================== NORMALIZE DATA =====================
 scaler_X_lstm = MinMaxScaler()
 scaler_y_lstm = MinMaxScaler()
