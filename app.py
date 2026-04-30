@@ -18,10 +18,10 @@ class PeakDemandForecaster:
     """Predict peak electricity demand for a given date."""
 
     def __init__(self):
-        print("Loading peak demand FNN model and preprocessing objects...")
+        print("Loading peak demand XGBoost model and preprocessing objects...")
         try:
-            from tensorflow.keras.models import load_model
-            self.model = load_model('peak_demand_model.keras')
+            with open('peak_demand_model.pkl', 'rb') as f:
+                self.model = pickle.load(f)
             
             with open('scaler_X_peak.pkl', 'rb') as f:
                 self.scaler_X = pickle.load(f)
@@ -68,6 +68,17 @@ class PeakDemandForecaster:
             values['PeakDemand_lag7'] = self.default_demand
         if 'PeakDemand_roll7' in self.features:
             values['PeakDemand_roll7'] = self.default_demand
+        if 'PeakDemand_std7' in self.features:
+            values['PeakDemand_std7'] = 200.0  # reasonable default standard deviation
+            
+        if 'Temp_max' in self.features:
+            values['Temp_max'] = 25.0
+        if 'Temp_mean' in self.features:
+            values['Temp_mean'] = 20.0
+        if 'Humidity_mean' in self.features:
+            values['Humidity_mean'] = 70.0
+        if 'HeatIndex_max' in self.features:
+            values['HeatIndex_max'] = 25.0
         
         missing = [f for f in self.features if f not in values]
         if missing:
@@ -75,7 +86,7 @@ class PeakDemandForecaster:
 
         feature_vector = np.array([values[f] for f in self.features]).reshape(1, -1)
         feature_scaled = self.scaler_X.transform(feature_vector)
-        y_pred_scaled = self.model.predict(feature_scaled, verbose=0).reshape(-1, 1)
+        y_pred_scaled = self.model.predict(feature_scaled).reshape(-1, 1)
         y_pred = self.scaler_y.inverse_transform(y_pred_scaled)[0, 0]
         
         return {
@@ -114,11 +125,13 @@ class LSTMDemandForecaster:
             print(f"Error loading LSTM file: {e}")
             raise
 
-        self.time_steps = 24
+        self.time_steps = 168
         print("LSTM Model loaded successfully!")
 
     def create_sequence(self, dt, temp, humidity, wind_speed):
         sequence = []
+        heat_index = temp + 0.33 * humidity - 0.7 * wind_speed - 4.0
+        
         for i in range(self.time_steps, 0, -1):
             past_dt = dt - timedelta(hours=i)
             hour = past_dt.hour
@@ -133,6 +146,7 @@ class LSTMDemandForecaster:
                 'Temperature': temp,
                 'Humidity': humidity,
                 'WindSpeed': wind_speed,
+                'Rain': 0.0,
                 'Hour': hour,
                 'DayOfWeek': day_of_week,
                 'Month': month,
@@ -142,7 +156,13 @@ class LSTMDemandForecaster:
                 'Hour_sin': np.sin(2 * np.pi * hour / 24),
                 'Hour_cos': np.cos(2 * np.pi * hour / 24),
                 'Dow_sin': np.sin(2 * np.pi * day_of_week / 7),
-                'Dow_cos': np.cos(2 * np.pi * day_of_week / 7)
+                'Dow_cos': np.cos(2 * np.pi * day_of_week / 7),
+                'HeatIndex': heat_index,
+                'Demand_t-1': self.default_demand,
+                'Demand_t-24': self.default_demand,
+                'Demand_t-168': self.default_demand,
+                'RollingMean_24': self.default_demand,
+                'RollingMean_168': self.default_demand
             }
             
             missing = [f for f in self.features if f not in values]
@@ -161,32 +181,29 @@ class LSTMDemandForecaster:
         X_seq_scaled = self.create_sequence(dt, temp, humidity, wind_speed)
         
         y_pred_scaled = self.model.predict(X_seq_scaled, verbose=0)
-        y_pred = self.scaler_y.inverse_transform(y_pred_scaled)[0, 0]
+        y_pred = self.scaler_y.inverse_transform(y_pred_scaled.reshape(-1, 1)).flatten()
 
         return {
             'datetime': datetime_str,
-            'predicted_demand_mw': round(float(y_pred), 2),
+            'predicted_demand_mw': round(float(y_pred[0]), 2),
             'temperature': temp,
             'humidity': humidity,
-            'wind_speed': wind_speed
+            'wind_speed': wind_speed,
+            'forecast_array': y_pred.tolist()
         }
 
-    def predict_hourly_forecast(self, start_datetime, temp, humidity, wind_speed, hours=24):
+    def predict_hourly_forecast(self, start_datetime, temp, humidity, wind_speed):
+        # We predict 24 hours in a single pass now
+        result = self.predict_demand(start_datetime, temp, humidity, wind_speed)
         forecasts = []
         dt = pd.to_datetime(start_datetime)
         
-        for i in range(hours):
+        for i, pred_val in enumerate(result['forecast_array']):
             current_dt = dt + timedelta(hours=i)
-            temp_adj = temp + 5 * np.sin(np.pi * current_dt.hour / 12 - np.pi/2) - 5 * np.sin(np.pi * dt.hour / 12 - np.pi/2)
-            
-            result = self.predict_demand(
-                current_dt.strftime('%Y-%m-%d %H:%M:%S'),
-                temp_adj, humidity, wind_speed
-            )
             forecasts.append({
                 'hour': current_dt.strftime('%H:%M'),
                 'date': current_dt.strftime('%Y-%m-%d'),
-                'demand': result['predicted_demand_mw']
+                'demand': round(pred_val, 2)
             })
             
         return forecasts
@@ -231,12 +248,13 @@ def predict():
             datetime_str, temperature, humidity, wind_speed
         )
         
-        # Get hourly forecast
+        # Get hourly forecast (which now simply uses the direct 24 output)
         hourly = forecaster.predict_hourly_forecast(
-            datetime_str, temperature, humidity, wind_speed, hours=24
+            datetime_str, temperature, humidity, wind_speed
         )
         
         result['hourly_forecast'] = hourly
+        del result['forecast_array']  # Don't send this raw array back
         
         return jsonify(result)
     

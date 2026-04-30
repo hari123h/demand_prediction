@@ -27,40 +27,49 @@ df['Hour_cos'] = np.cos(2 * np.pi * df['Hour'] / 24)
 df['Dow_sin'] = np.sin(2 * np.pi * df['DayOfWeek'] / 7)
 df['Dow_cos'] = np.cos(2 * np.pi * df['DayOfWeek'] / 7)
 
-# We are NOT computing explicit rolling or lag columns here like Demand_lag1.
-# The LSTM will handle the "lag" naturally by looking at the whole 24h sequence.
+# ===================== NEW FEATURES =====================
+df['HeatIndex'] = df['Temperature'] + 0.33 * df['Humidity'] - 0.7 * df['WindSpeed'] - 4.0
 
+df['Demand_t-1'] = df['Demand'].shift(1)
+df['Demand_t-24'] = df['Demand'].shift(24)
+df['Demand_t-168'] = df['Demand'].shift(168)
+
+df['RollingMean_24'] = df['Demand'].rolling(window=24).mean()
+df['RollingMean_168'] = df['Demand'].rolling(window=168).mean()
+
+# Drop rows with NaN values created by shifts and rolling means
 df = df.dropna().reset_index(drop=True)
 
 # ===================== SELECT FEATURES & TARGET =====================
 features = [
-    'Demand', # Keeping past demand in the sequence
+    'Demand',
     'Temperature',
     'Humidity',
     'WindSpeed',
+    'Rain',
     'Month',
     'IsWeekend',
     'Hour_sin',
     'Hour_cos',
     'Dow_sin',
-    'Dow_cos'
+    'Dow_cos',
+    'HeatIndex',
+    'Demand_t-1',
+    'Demand_t-24',
+    'Demand_t-168',
+    'RollingMean_24',
+    'RollingMean_168'
 ]
 
 target = 'Demand'
 
+# Ensure all features exist (e.g., Rain might be missing if previously removed, but should be kept according to instructions)
+if 'Rain' not in df.columns:
+    df['Rain'] = 0.0 # fallback if not present, though electricity_data.csv has it
+
 X_df = df[features].copy()
 y_df = df[target].copy()
-#correlation matrix
-# ===================== CORRELATION MATRIX =====================
-corr = X_df.corr()
 
-plt.figure(figsize=(14,10))
-sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm")
-plt.title("Full Correlation Matrix")
-plt.show()
-
-# Optional: Save correlation matrix
-corr.to_csv("correlation_matrix.csv")
 # ===================== NORMALIZE DATA =====================
 scaler_X_lstm = MinMaxScaler()
 scaler_y_lstm = MinMaxScaler()
@@ -69,31 +78,39 @@ X_scaled = scaler_X_lstm.fit_transform(X_df)
 y_scaled = scaler_y_lstm.fit_transform(y_df.values.reshape(-1, 1)).flatten()
 
 # ===================== CREATE SEQUENCES FOR LSTM =====================
-# For LSTM, we need to create a 3D array: [samples, time_steps, features]
-TIME_STEPS = 24 # Use past 24 hours to predict the next hour
+TIME_STEPS = 168 # 7 days
+FORECAST_STEPS = 24 # Predict next 24 hours directly
 
-def create_sequences(X, y, time_steps):
-    Xs, ys = [], []
-    for i in range(len(X) - time_steps):
-        Xs.append(X[i:(i + time_steps)]) # Past 24 hours of features
-        ys.append(y[i + time_steps])     # 25th hour target demand
-    return np.array(Xs), np.array(ys)
+def create_sequences(X, y, time_steps, forecast_steps):
+    Xs, ys, dates = [], [], []
+    for i in range(len(X) - time_steps - forecast_steps + 1):
+        Xs.append(X[i:(i + time_steps)])
+        ys.append(y[i + time_steps : i + time_steps + forecast_steps])
+        dates.append(df['DateTime'].iloc[i + time_steps])
+    return np.array(Xs), np.array(ys), pd.Series(dates)
 
-X_seq, y_seq = create_sequences(X_scaled, y_scaled, TIME_STEPS)
+X_seq, y_seq, target_dates = create_sequences(X_scaled, y_scaled, TIME_STEPS, FORECAST_STEPS)
 
 print(f"Original X shape: {X_scaled.shape}")
 print(f"Sequence X shape: {X_seq.shape}")
 print(f"Sequence y shape: {y_seq.shape}")
 
-# ===================== TRAIN-TEST SPLIT =====================
-split_idx = int(len(X_seq) * 0.8)
+# ===================== TRAIN-TEST SPLIT (MONTHLY) =====================
+# We will split such that the first 80% of months are in training, and 20% in testing.
+target_months = target_dates.dt.to_period('M')
+unique_months = target_months.unique()
+split_month_idx = int(len(unique_months) * 0.8)
+split_month = unique_months[split_month_idx]
 
-X_train_lstm = X_seq[:split_idx]
-X_test_lstm = X_seq[split_idx:]
-y_train_lstm = y_seq[:split_idx]
-y_test_lstm = y_seq[split_idx:]
+train_mask = target_months < split_month
+test_mask = target_months >= split_month
 
-print(f"\nTrain-Test Split:")
+X_train_lstm = X_seq[train_mask]
+X_test_lstm = X_seq[test_mask]
+y_train_lstm = y_seq[train_mask]
+y_test_lstm = y_seq[test_mask]
+
+print(f"\nTrain-Test Split (Split at {split_month}):")
 print(f"  Training: {len(X_train_lstm):,} samples")
 print(f"  Testing:  {len(X_test_lstm):,} samples")
 

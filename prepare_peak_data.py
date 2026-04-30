@@ -17,9 +17,16 @@ df['Date'] = df['DateTime'].dt.date
 
 print(f"Loaded main electricity data: {df.shape}")
 
+# Calculate HeatIndex on hourly data before aggregation
+df['HeatIndex'] = df['Temperature'] + 0.33 * df['Humidity'] - 0.7 * df['WindSpeed'] - 4.0
+
 # ===================== AGGREGATE DAILY PEAK =====================
 daily_df = df.groupby('Date').agg(
-    PeakDemand=('Demand', 'max')
+    PeakDemand=('Demand', 'max'),
+    Temp_max=('Temperature', 'max'),
+    Temp_mean=('Temperature', 'mean'),
+    Humidity_mean=('Humidity', 'mean'),
+    HeatIndex_max=('HeatIndex', 'max')
 ).reset_index()
 
 daily_df['Date'] = pd.to_datetime(daily_df['Date'])
@@ -46,18 +53,23 @@ daily_df['Dow_cos'] = np.cos(2 * np.pi * daily_df['DayOfWeek'] / 7)
 daily_df['PeakDemand_lag1'] = daily_df['PeakDemand'].shift(1)
 daily_df['PeakDemand_lag7'] = daily_df['PeakDemand'].shift(7)
 daily_df['PeakDemand_roll7'] = daily_df['PeakDemand'].rolling(window=7, min_periods=7).mean()
+daily_df['PeakDemand_std7'] = daily_df['PeakDemand'].rolling(window=7, min_periods=7).std()
 
 # Drop NaNs
 daily_df = daily_df.dropna().reset_index(drop=True)
 
 features = [
+    'PeakDemand_lag1',
+    'PeakDemand_lag7',
+    'Temp_max',
+    'Temp_mean',
+    'Humidity_mean',
+    'HeatIndex_max',
+    'PeakDemand_roll7',
+    'PeakDemand_std7',
     'IsWeekend',
     'Month_sin',
-    'Month_cos',
-    'Dow_sin',
-    'Dow_cos',
-    'PeakDemand_lag1',
-    'PeakDemand_lag7'
+    'Month_cos'
 ]
 
 target = 'PeakDemand'
@@ -72,7 +84,7 @@ corr = corr_df.corr()
 plt.figure(figsize=(12, 8))
 sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm")
 plt.title("Peak Demand Correlation Matrix")
-plt.show()
+# plt.show()
 
 corr.to_csv("peak_correlation_matrix.csv")
 
@@ -87,16 +99,21 @@ scaler_y_peak = MinMaxScaler()
 X_scaled = scaler_X_peak.fit_transform(X)
 y_scaled = scaler_y_peak.fit_transform(y.values.reshape(-1, 1)).flatten()
 
-# ===================== TRAIN-TEST SPLIT =====================
-# chronological split
-split_idx = int(len(X_scaled) * 0.8)
+# ===================== TRAIN-TEST SPLIT (MONTHLY) =====================
+target_months = daily_df['Date'].dt.to_period('M')
+unique_months = target_months.unique()
+split_month_idx = int(len(unique_months) * 0.8)
+split_month = unique_months[split_month_idx]
 
-X_train_peak = X_scaled[:split_idx]
-X_test_peak = X_scaled[split_idx:]
-y_train_peak = y_scaled[:split_idx]
-y_test_peak = y_scaled[split_idx:]
+train_mask = target_months < split_month
+test_mask = target_months >= split_month
 
-print(f"\nTrain-Test Split (Peak Demand):")
+X_train_peak = X_scaled[train_mask]
+X_test_peak = X_scaled[test_mask]
+y_train_peak = y_scaled[train_mask]
+y_test_peak = y_scaled[test_mask]
+
+print(f"\nTrain-Test Split (Peak Demand - Split at {split_month}):")
 print(f"  Training: {len(X_train_peak):,} samples")
 print(f"  Testing:  {len(X_test_peak):,} samples")
 
